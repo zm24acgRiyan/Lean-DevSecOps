@@ -1,4 +1,4 @@
-# Updated pipeline with SonarQube SAST Scan
+# This is the complete, correct file
 # File location: .github/workflows/main.yml
 
 name: Java CI with Maven (SAST Scan)
@@ -16,9 +16,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-      # SonarQube needs fetch-depth: 0 to analyze history
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # SonarQube needs this
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -26,13 +25,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Cache SonarCloud packages as well as Maven
     - name: Cache SonarCloud packages
       uses: actions/cache@v4
       with:
         path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
+
     - name: Cache Maven packages
       uses: actions/cache@v4
       with:
@@ -41,70 +40,12 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    # Build the project AND run the SonarQube analysis
-    # Note: verify includes the 'package' phase
     - name: Build and Analyze with Maven & SonarQube
-      # We need GITHUB_TOKEN for SonarCloud to decorate Pull Requests (optional but good)
-      # SONAR_TOKEN comes from GitHub Secrets
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-           -Dsonar.projectKey=Zm24acgRiyan_Lean-DevSecOps \
-           -Dsonar.organization=zm24acgRiyan \
-           -Dsonar.host.url=https://sonarcloud.io
-# Updated pipeline with SonarQube SAST Scan
-# File location: .github/workflows/main.yml
-
-name: Java CI with Maven (SAST Scan)
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      # SonarQube needs fetch-depth: 0 to analyze history
-      with:
-        fetch-depth: 0
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    # Cache SonarCloud packages as well as Maven
-    - name: Cache SonarCloud packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
-
-    # Build the project AND run the SonarQube analysis
-    # Note: verify includes the 'package' phase
-    - name: Build and Analyze with Maven & SonarQube
-      # We need GITHUB_TOKEN for SonarCloud to decorate Pull Requests (optional but good)
-      # SONAR_TOKEN comes from GitHub Secrets
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-           -Dsonar.projectKey=Zm24acgRiyan_Lean-DevSecOps \
+           -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
+s
            -Dsonar.organization=zm24acgRiyan \
            -Dsonar.host.url=https://sonarcloud.io
