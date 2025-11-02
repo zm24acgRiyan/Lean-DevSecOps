@@ -1,4 +1,4 @@
-# This is the complete, correct file
+# This is the corrected file
 # File location: .github/workflows/main.yml
 
 name: Java CI with Maven (SAST Scan)
@@ -46,6 +46,5 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
-s
            -Dsonar.organization=zm24acgRiyan \
            -Dsonar.host.url=https://sonarcloud.io
