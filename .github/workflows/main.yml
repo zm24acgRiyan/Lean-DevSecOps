@@ -1,4 +1,4 @@
-# Corrected file using Maven Wrapper (./mvnw)
+# A more robust pipeline that separates Build from Analysis
 
 name: Java CI with Maven (SAST Scan)
 
@@ -9,14 +9,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-analyze: # Renamed the job for clarity
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # SonarQube needs this
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -39,16 +39,24 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    # This step gives the Maven Wrapper permission to run
     - name: Grant execute permission for mvnw
       run: chmod +x mvnw
 
-    - name: Build and Analyze with Maven & SonarQube
+    # --- STEP 1: Build and Test ---
+    # We run 'verify' first. If this step fails,
+    # the problem is your Java code or its tests.
+    - name: Build and Test with Maven
+      run: ./mvnw -B verify
+
+    # --- STEP 2: SonarQube Scan ---
+    # This step ONLY runs if the "Build and Test" step (above) was successful.
+    - name: Analyze with SonarQube
+      # This 'if' statement is the key.
+      if: success() 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      # Use ./mvnw instead of mvn
-      run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      run: ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
            -Dsonar.organization=zm24acgRiyan \
            -Dsonar.host.url=https://sonarcloud.io
