@@ -1,4 +1,4 @@
-# A more robust pipeline that separates Build from Analysis
+# Corrected file using single-line run commands for robustness
 
 name: Java CI with Maven (SAST Scan)
 
@@ -9,7 +9,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-analyze: # Renamed the job for clarity
+  build-and-analyze:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,20 +43,15 @@ jobs:
       run: chmod +x mvnw
 
     # --- STEP 1: Build and Test ---
-    # We run 'verify' first. If this step fails,
-    # the problem is your Java code or its tests.
     - name: Build and Test with Maven
       run: ./mvnw -B verify
 
     # --- STEP 2: SonarQube Scan ---
-    # This step ONLY runs if the "Build and Test" step (above) was successful.
+    # This step ONLY runs if the "Build and Test" step was successful.
     - name: Analyze with SonarQube
-      # This 'if' statement is the key.
       if: success() 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-           -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
-           -Dsonar.organization=zm24acgRiyan \
-           -Dsonar.host.url=https://sonarcloud.io
+      # This is the corrected, single-line command
+      run: ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps -Dsonar.organization=zm24acgRiyan -Dsonar.host.url=https://sonarcloud.io
