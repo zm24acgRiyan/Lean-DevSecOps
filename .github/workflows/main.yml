@@ -50,13 +50,13 @@ jobs:
       run: ./mvnw -B verify
 
     # --- STEP 6: SonarCloud Static Analysis ---
-    - name: Analyze with SonarQube
-      if: success()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.projectKey=zm24acgriyan_Lean-DevSecOps \
-          -Dsonar.organization=zm24acgriyan \
-          -Dsonar.host.url=https://sonarcloud.io
+   - name: Analyze with SonarQube
+  if: success()
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  run: |
+    ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
+      -Dsonar.organization=zm24acgriyan \
+      -Dsonar.host.url=https://sonarcloud.io
