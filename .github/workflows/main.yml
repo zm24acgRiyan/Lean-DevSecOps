@@ -1,4 +1,6 @@
-name: Java CI with Maven (SAST Scan)
+# Final pipeline with SAST (SonarQube) and SCA (OWASP)
+
+name: Java CI with Maven (SAST + SCA Scans)
 
 on:
   push:
@@ -49,8 +51,8 @@ jobs:
       - name: Build and Test with Maven
         run: ./mvnw -B verify
 
-      # --- STEP 6: SonarCloud Static Analysis ---
-      - name: Analyze with SonarQube
+      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
+      - name: Analyze with SonarQube (SAST)
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,3 +62,9 @@ jobs:
             -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
+            
+      # --- STEP 7: NEW STEP - OWASP Scan (SCA) ---
+      # This scans your project's dependencies for known vulnerabilities
+      - name: Analyze with OWASP Dependency-Check (SCA)
+        if: success()
+        run: ./mvnw -B org.owasp:dependency-check-maven:check
