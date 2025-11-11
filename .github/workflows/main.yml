@@ -1,4 +1,4 @@
-# Final pipeline with SAST (SonarQube) and SCA (OWASP)
+# Final pipeline with SAST (SonarQube) and SCA (OWASP) with NVD API Key
 
 name: Java CI with Maven (SAST + SCA Scans)
 
@@ -42,6 +42,14 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      
+      # --- STEP 3b: Cache OWASP NVD data ---
+      # This is a new cache for the vulnerability database itself
+      - name: Cache OWASP NVD
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-owasp-nvd
 
       # --- STEP 4: Make mvnw executable ---
       - name: Grant execute permission for mvnw
@@ -63,8 +71,10 @@ jobs:
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
             
-      # --- STEP 7: NEW STEP - OWASP Scan (SCA) ---
-      # This scans your project's dependencies for known vulnerabilities
+      # --- STEP 7: MODIFIED - OWASP Scan (SCA) ---
+      # This step now passes the NVD_API_KEY from secrets
       - name: Analyze with OWASP Dependency-Check (SCA)
         if: success()
-        run: ./mvnw -B org.owasp:dependency-check-maven:check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
