@@ -1,4 +1,5 @@
 # Final pipeline with SAST (SonarQube) and SCA (OWASP) with NVD API Key
+# This version adds -X (debug) and explicit key passing to Step 7
 
 name: Java CI with Maven (SAST + SCA Scans)
 
@@ -71,11 +72,9 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io
             
       # --- STEP 7: MODIFIED - OWASP Scan (SCA) ---
-      # This step now relies on the env variable, which the plugin finds automatically.
-      # This is a cleaner, more reliable method.
+      # This step now includes -X (debug) and explicitly passes the API key
       - name: Analyze with OWASP Dependency-Check (SCA)
         if: success()
         env:
-          # The plugin will automatically detect and use this environment variable
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./mvnw -B org.owasp:dependency-check-maven:check
+        run: ./mvnw -B -X org.owasp:dependency-check-maven:check -DnvdApiKey=${{ env.NVD_API_KEY }}
