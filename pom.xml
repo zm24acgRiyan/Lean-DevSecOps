@@ -51,28 +51,24 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-			<!-- This is the new plugin configuration -->
+			<!-- This is the updated plugin configuration -->
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
 				<version>9.2.0</version> <!-- Use a recent, specific version -->
 				<configuration>
-					<!-- This is the critical tag -->
-					<!-- It tells the build to FAIL if any vulnerability -->
-					<!-- with a CVSS score of 9.0 or higher is found. -->
-					<!-- Log4Shell has a score of 10.0, so this will trigger. -->
 					<failBuildOnCVSS>9.0</failBuildOnCVSS>
-
-					<!-- NEW LINE ADDED TO FIX 403 ERROR -->
-					<!-- Adds a 3-second delay between NVD API calls -->
-					<nvdApiDelay>3000</nvdApiDelay>
 					
+					<!-- Tells the plugin to read the key from an env variable -->
+					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+
+					<!-- NEW: Adds a 10-second delay between NVD API calls -->
+					<nvdApiDelay>10000</nvdApiDelay>
+
+					<!-- NEW: Disables auto-updating so we can control it in main.yml -->
+					<autoUpdate>false</autoUpdate>
+
 				</configuration>
-				<!-- 
-                This executions block was removed in the previous step to stop it 
-                from running automatically during 'verify'. 
-                The main.yml file now calls 'check' manually.
-                -->
 			</plugin>
 		</plugins>
 	</build>
