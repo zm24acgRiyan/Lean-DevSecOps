@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven.apache.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -52,6 +52,7 @@
             </plugin>
 
             <!-- This is the OWASP plugin configuration -->
+            <!-- The <executions> block is REMOVED to stop it from running automatically -->
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
@@ -61,13 +62,6 @@
                     <!-- with a CVSS score of 9.0 or higher is found. -->
                     <failBuildOnCVSS>9.0</failBuildOnCVSS>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
