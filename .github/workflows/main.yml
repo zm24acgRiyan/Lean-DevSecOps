@@ -44,7 +44,6 @@ jobs:
             ${{ runner.os }}-maven-
       
       # --- STEP 3b: Cache OWASP NVD data ---
-      # This is a new cache for the vulnerability database itself
       - name: Cache OWASP NVD
         uses: actions/cache@v4
         with:
@@ -72,9 +71,11 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io
             
       # --- STEP 7: MODIFIED - OWASP Scan (SCA) ---
-      # This step now passes the NVD_API_KEY from secrets
+      # This step now relies on the env variable, which the plugin finds automatically.
+      # This is a cleaner, more reliable method.
       - name: Analyze with OWASP Dependency-Check (SCA)
         if: success()
         env:
+          # The plugin will automatically detect and use this environment variable
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./mvnw -B org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B org.owasp:dependency-check-maven:check
