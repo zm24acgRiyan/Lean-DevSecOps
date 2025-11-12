@@ -1,4 +1,4 @@
-Final pipeline - This version splits OWASP update and checkname: Java CI with Maven (SAST + SCA Scans)on:push:branches: [ "main" ]pull_request:branches: [ "main" ]jobs:build-and-analyze:runs-on: ubuntu-lateststeps:
+steps:
   # --- STEP 0: Checkout Code ---
   - name: Checkout Code
     uses: actions/checkout@v4
