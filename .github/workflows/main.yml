@@ -1,72 +1,86 @@
-steps:
-  # --- STEP 0: Checkout Code ---
-  - name: Checkout Code
-    uses: actions/checkout@v4
-    with:
-      fetch-depth: 0  # SonarQube needs full history for analysis
+# Final pipeline - This version splits OWASP update and check
 
-  # --- STEP 1: Set up Java ---
-  - name: Set up JDK 17
-    uses: actions/setup-java@v4
-    with:
-      java-version: '17'
-      distribution: 'temurin'
+name: Java CI with Maven (SAST + SCA Scans)
 
-  # --- STEP 2: Cache SonarCloud packages ---
-  - name: Cache SonarCloud packages
-    uses: actions/cache@v4
-    with:
-      path: ~/.sonar/cache
-      key: ${{ runner.os }}-sonar
-      restore-keys: ${{ runner.os }}-sonar
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-  # --- STEP 3: Cache Maven dependencies ---
-  - name: Cache Maven packages
-    uses: actions/cache@v4
-    with:
-      path: ~/.m2/repository
-      key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-      restore-keys: |
-        ${{ runner.os }}-maven-
-  
-  # --- STEP 3b: Cache OWASP NVD data ---
-  - name: Cache OWASP NVD
-    uses: actions/cache@v4
-    with:
-      # The path to the data directory
-      path: ~/.m2/repository/org/owasp/dependency-check-data
-      key: ${{ runner.os }}-owasp-nvd
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
 
-  # --- STEP 4: Make mvnw executable ---
-  - name: Grant execute permission for mvnw
-    run: chmod +x mvnw
+    steps:
+      # --- STEP 0: Checkout Code ---
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube needs full history for analysis
 
-  # --- STEP 5: Build and Test ---
-  - name: Build and Test with Maven
-    run: ./mvnw -B verify
+      # --- STEP 1: Set up Java ---
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-  # --- STEP 6: SonarCloud Static Analysis (SAST) ---
-  - name: Analyze with SonarQube (SAST)
-    if: success()
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    run: |
-      ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-        -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
-        -Dsonar.organization=zm24acgriyan \
-        -Dsonar.host.url=https://sonarcloud.io
-        
-  # --- STEP 7a: NEW - Update OWASP Database (SCA) ---
-  # This step *only* downloads the NVD data
-  - name: Update OWASP Database (SCA)
-    if: success()
-    env:
-      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-    run: ./mvnw -B -X org.owasp:dependency-check-maven:update-only
+      # --- STEP 2: Cache SonarCloud packages ---
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-  # --- STEP 7b: NEW - Run OWASP Scan (SCA) ---
-  # This step *only* runs the scan using the data from 7a
-  - name: Run OWASP Scan (SCA)
-    if: success()
-    run: ./mvnw -B org.owasp:dependency-check-maven:check
+      # --- STEP 3: Cache Maven dependencies ---
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      # --- STEP 3b: Cache OWASP NVD data ---
+      - name: Cache OWASP NVD
+        uses: actions/cache@v4
+        with:
+          # The path to the data directory
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-owasp-nvd
+
+      # --- STEP 4: Make mvnw executable ---
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      # --- STEP 5: Build and Test ---
+      - name: Build and Test with Maven
+        run: ./mvnw -B verify
+
+      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
+      - name: Analyze with SonarQube (SAST)
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
+            -Dsonar.organization=zm24acgriyan \
+            -Dsonar.host.url=https://sonarcloud.io
+            
+      # --- STEP 7a: NEW - Update OWASP Database (SCA) ---
+      # This step *only* downloads the NVD data
+      - name: Update OWASP Database (SCA)
+        if: success()
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B -X org.owasp:dependency-check-maven:update-only
+
+      # --- STEP 7b: NEW - Run OWASP Scan (SCA) ---
+      # This step *only* runs the scan using the data from 7a
+      - name: Run OWASP Scan (SCA)
+        if: success()
+        run: ./mvnw -B org.owasp:dependency-check-maven:check
