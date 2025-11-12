@@ -1,76 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.7</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.0</version> <!-- Updated to a stable, recent version -->
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
 
-	<groupId>com.example</groupId>
-	<artifactId>Lean-DevSecOps</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Lean-DevSecOps</name>
-	<description>Lean DevSecOps Spring Boot Project for CI/CD and SonarCloud Integration</description>
+<groupId>com.example</groupId>
+<artifactId>Lean-DevSecOps</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>Lean-DevSecOps</name>
+<description>Lean DevSecOps Spring Boot Project for CI/CD and SonarCloud Integration</description>
 
-	<properties>
-		<java.version>17</java.version>
-	</properties>
+<properties>
+    <java.version>17</java.version>
+</properties>
 
-	<dependencies>
-		<!-- Spring Boot Web Starter -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
+<dependencies>
+    <!-- Spring Boot Web Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
 
-		<!-- Spring Boot Test Starter -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <!-- Spring Boot Test Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
 
-		<!-- A deliberately vulnerable dependency for SCA testing -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.14.1</version>
-		</dependency>
+    <!-- A deliberately vulnerable dependency for SCA testing -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.14.1</version>
+    </dependency>
 
-	</dependencies>
+</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<!-- This is the updated plugin configuration -->
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>9.2.0</version> <!-- Use a recent, specific version -->
-				<configuration>
-					<failBuildOnCVSS>9.0</failBuildOnCVSS>
-					
-					<!-- Tells the plugin to read the key from an env variable -->
-					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+        
+        <!-- OWASP Plugin Configuration -->
+        <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>9.2.0</version>
+            <configuration>
+                <!-- Fail build if any CVSS score is 9.0 or higher -->
+                <failBuildOnCVSS>9.0</failBuildOnCVSS>
+                
+                <!-- Do not run update automatically -->
+                <autoUpdate>false</autoUpdate>
+                
+                <!-- Add delay to NVD API calls to prevent 403 error -->
+                <nvdApiDelay>10000</nvdApiDelay> 
+                
+                <!-- NEW: Explicitly read the API key from an env variable -->
+                <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+            </configuration>
+            <!-- We removed the <executions> block so it only runs from main.yml -->
+        </plugin>
 
-					<!-- NEW: Adds a 10-second delay between NVD API calls -->
-					<nvdApiDelay>10000</nvdApiDelay>
+    </plugins>
+</build>
 
-					<!-- NEW: Disables auto-updating so we can control it in main.yml -->
-					<autoUpdate>false</autoUpdate>
-
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 </project>
