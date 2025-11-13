@@ -108,7 +108,7 @@ jobs:
             snyk.json
             snyk.sarif
 
-      # --- STEP 12: Upload Snyk SARIF to GitHub Security Tab ---
+      # --- STEP 12: Upload Snyk SARIF to GitHub Security Tabs ---
       - name: Upload Snyk Results to Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         if: always()
