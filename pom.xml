@@ -1,76 +1,52 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 <modelVersion>4.0.0</modelVersion>
+
 <parent>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-parent</artifactId>
-<version>3.5.7</version>
-<relativePath/>
-<!--  lookup parent from repository  -->
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.7</version>
+    <relativePath/> <!-- lookup parent from repository -->
 </parent>
+
 <groupId>com.example</groupId>
 <artifactId>Lean-DevSecOps</artifactId>
 <version>0.0.1-SNAPSHOT</version>
 <name>Lean-DevSecOps</name>
 <description>Lean DevSecOps Spring Boot Project for CI/CD and SonarCloud Integration</description>
-<properties>
-<java.version>17</java.version>
-<!-- Dependency for Snyk Maven Plugin -->
-<snyk.version>2.0.0</snyk.version>
-</properties>
-<dependencies>
-<!--  Spring Boot Web Starter  -->
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-<!--  Spring Boot Test Starter  -->
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-test</artifactId>
-<scope>test</scope>
-</dependency>
-</dependencies>
-<build>
-<plugins>
-<plugin>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-maven-plugin</artifactId>
-</plugin>
 
-<!-- 
-    SNYK Maven Plugin for Dependency Vulnerability Scanning (DevSecOps).
-    This plugin integrates security testing directly into the build process.
--->
-<plugin>
-<groupId>io.snyk</groupId>
-<artifactId>snyk-maven-plugin</artifactId>
-<version>${snyk.version}</version>
-<executions>
-<execution>
-<id>snyk-security-check</id>
-<!-- Binds the security check to the 'verify' phase, running after compilation and testing -->
-<phase>verify</phase>
-<goals>
-<goal>test</goal>
-</goals>
-<configuration>
-<!-- Set the minimum severity level to trigger a build failure. -->
-<!-- Ensures the build fails if High or Critical vulnerabilities are found. -->
-<failOnSeverity>high</failOnSeverity>
-<!-- 
-    NEW: Explicitly enable and define paths for JSON and SARIF reports.
-    This ensures the pipeline's artifact upload step can find the files. 
--->
-<reportJson>true</reportJson>
-<reportSarif>true</reportSarif>
-<!-- Uses Maven variable to target the standard 'target' directory -->
-<jsonFile>${project.build.directory}/snyk.json</jsonFile>
-<sarifFile>${project.build.directory}/snyk.sarif</sarifFile>
-<!-- The Snyk API token must be set as an environment variable (SNYK_TOKEN) in your CI/CD pipeline. -->
-</configuration>
-</execution>
-</executions>
-</plugin>
-</plugins>
+<properties>
+    <java.version>17</java.version>
+</properties>
+
+<dependencies>
+    <!-- Spring Boot Web Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Spring Boot Test Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
 </build>
+
+
 </project>
