@@ -9,7 +9,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.0</version> <!-- Updated to a stable, recent version -->
+    <version>3.5.7</version>
     <relativePath/> <!-- lookup parent from repository -->
 </parent>
 
@@ -52,28 +52,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
         </plugin>
-        
-        <!-- OWASP Plugin Configuration -->
-        <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>9.2.0</version>
-            <configuration>
-                <!-- Fail build if any CVSS score is 9.0 or higher -->
-                <failBuildOnCVSS>9.0</failBuildOnCVSS>
-                
-                <!-- Do not run update automatically -->
-                <autoUpdate>false</autoUpdate>
-                
-                <!-- Add delay to NVD API calls to prevent 403 error -->
-                <nvdApiDelay>10000</nvdApiDelay> 
-                
-                <!-- NEW: Explicitly read the API key from an env variable -->
-                <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
-            </configuration>
-            <!-- We removed the <executions> block so it only runs from main.yml -->
-        </plugin>
-
     </plugins>
 </build>
 

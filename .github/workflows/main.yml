@@ -1,4 +1,6 @@
-name: Java CI with Maven (SAST + SCA Scans)
+# Final pipeline with SAST (SonarQube) and NEW Snyk (SCA)
+
+name: Java CI with Maven (SAST + Snyk SCA)
 
 on:
   push:
@@ -40,14 +42,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      
-      # --- STEP 3b: Cache OWASP NVD data ---
-      - name: Cache OWASP NVD
-        uses: actions/cache@v4
-        with:
-          # The path to the data directory
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-owasp-nvd
 
       # --- STEP 4: Make mvnw executable ---
       - name: Grant execute permission for mvnw
@@ -69,18 +63,17 @@ jobs:
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
             
-      # --- STEP 7a: NEW - Update OWASP Database (SCA) ---
-      # This step *only* downloads the NVD data
-      - name: Update OWASP Database (SCA)
+      # --- STEP 7: NEW - Run Snyk Open Source (SCA) Scan ---
+      # This replaces the broken OWASP steps.
+      # It will test your pom.xml, find the log4j vulnerability,
+      # and fail the build as intended.
+      - name: Run Snyk Open Source (SCA) Scan
         if: success()
+        # This is the official Snyk GitHub Action for Maven.
+        uses: snyk/actions/maven@latest
         env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./mvnw -B -X org.owasp:dependency-check-maven:update-only
-
-      # --- STEP 7b: NEW - Run OWASP Scan (SCA) ---
-      # This step *only* runs the scan using the data from 7a
-      - name: Run OWASP Scan (SCA)
-        if: success()
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./mvnw -B -X org.owasp:dependency-check-maven:check
+          # This pulls your SNYK_TOKEN from GitHub Secrets
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          # This command tells Snyk to fail if it finds any high-severity vulnerability
+          args: --fail-on=high
