@@ -61,24 +61,23 @@ jobs:
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
 
-      # --- STEP 7: Verify Java Setup (Optional but Recommended) ---
+      # --- STEP 7: Verify Java Setup (Optional but Helpful for Debugging) ---
       - name: Verify Java Setup
         run: |
           echo "JAVA_HOME is set to: $JAVA_HOME"
           java -version
           ./mvnw -v
 
-      # --- STEP 8: Snyk Scan (SCA) ---
-      - name: Run Snyk Open Source (SCA) Scan
-        uses: snyk/actions/maven@v1
+      # --- STEP 8: Snyk Scan (SCA) using CLI ---
+      - name: Install and Run Snyk CLI
         if: success()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          JAVA_HOME: /opt/hostedtoolcache/jdk/17*/x64  # Explicitly define JAVA_HOME
-        with:
-          command: test
-          args: --severity-threshold=high --json-file-output=snyk.json --sarif-file-output=snyk.sarif
-          project-folder: .   # Ensure mvnw runs in correct directory
+        run: |
+          echo "Installing Snyk CLI..."
+          npm install -g snyk
+          echo "Running Snyk test..."
+          snyk test --all-projects --severity-threshold=high --json-file-output=snyk.json --sarif-file-output=snyk.sarif
 
       # --- STEP 9: Upload Snyk Scan Reports ---
       - name: Upload Snyk Scan Reports
@@ -89,3 +88,10 @@ jobs:
           path: |
             snyk.json
             snyk.sarif
+
+      # --- STEP 10: Upload Snyk SARIF to GitHub Security Tab ---
+      - name: Upload Snyk Results to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
