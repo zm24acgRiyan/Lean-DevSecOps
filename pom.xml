@@ -1,95 +1,59 @@
-name: Java CI with Maven (SAST + Snyk SCA)
+<?xml version="1.0" encoding="UTF-8"?>
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-jobs:
-  build-and-analyze:
-    runs-on: ubuntu-latest
+<modelVersion>4.0.0</modelVersion>
 
-    steps:
-      # --- STEP 0: Checkout Code ---
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # SonarQube needs full history
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.7</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
 
-      # --- STEP 1: Set up Java ---
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+<groupId>com.example</groupId>
+<artifactId>Lean-DevSecOps</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>Lean-DevSecOps</name>
+<description>Lean DevSecOps Spring Boot Project for CI/CD and SonarCloud Integration</description>
 
-      # --- STEP 2 & 3: Cache Dependencies ---
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+<properties>
+    <java.version>17</java.version>
+</properties>
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+<dependencies>
+    <!-- Spring Boot Web Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
 
-      # --- STEP 4: Make mvnw Executable ---
-      - name: Grant execute permission for mvnw
-        run: chmod +x mvnw
+    <!-- Spring Boot Test Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
 
-      # --- STEP 5: Build and Test ---
-      - name: Build and Test with Maven
-        run: ./mvnw -B verify
+    <!-- A deliberately vulnerable dependency for SCA testing -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.14.1</version>
+    </dependency>
 
-      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
-      - name: Analyze with SonarQube (SAST)
-        if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
-            -Dsonar.organization=zm24acgriyan \
-            -Dsonar.host.url=https://sonarcloud.io
+</dependencies>
 
-      # --- STEP 7: Install and Run Snyk (SCA) ---
-      - name: Install Snyk CLI
-        run: |
-          echo "Installing Snyk CLI..."
-          npm install -g snyk
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
 
-      - name: Authenticate Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      - name: Run Snyk Open Source (SCA) Scan
-        continue-on-error: true
-        run: |
-          echo "Running Snyk test..."
-          snyk test --all-projects --severity-threshold=high --json-file-output=snyk.json || true
-          snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif || true
-
-           # --- STEP 8: Upload Snyk Scan Report (if generated) ---
-      - name: Upload Snyk Scan Report (if generated)
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: snyk-scan-report
-          path: |
-            snyk.json
-            snyk.sarif
-
-      # --- STEP 9: Upload to GitHub Security Dashboard (Optional) ---
-      - name: Upload Snyk SARIF to GitHub Security Dashboard
-        if: success() && hashFiles('snyk.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk.sarif
+</project>
