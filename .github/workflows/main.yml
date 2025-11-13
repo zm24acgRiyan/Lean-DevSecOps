@@ -1,79 +1,85 @@
-# Final pipeline with SAST (SonarQube) and NEW Snyk (SCA)
-
 name: Java CI with Maven (SAST + Snyk SCA)
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+push:
+branches: [ "main" ]
+pull_request:
+branches: [ "main" ]
 
 jobs:
-  build-and-analyze:
-    runs-on: ubuntu-latest
+build-and-analyze:
+runs-on: ubuntu-latest
 
-    steps:
-      # --- STEP 0: Checkout Code ---
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # SonarQube needs full history for analysis
+steps:
+  # --- STEP 0: Checkout Code ---
+  - name: Checkout Code
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0  # SonarQube needs full history
 
-      # --- STEP 1: Set up Java ---
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+  # --- STEP 1: Set up Java ---
+  - name: Set up JDK 17
+    uses: actions/setup-java@v4
+    with:
+      java-version: '17'
+      distribution: 'temurin'
 
-      # --- STEP 2: Cache SonarCloud packages ---
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+  # --- STEP 2 & 3: Caching ---
+  - name: Cache SonarCloud packages
+    uses: actions/cache@v4
+    with:
+      path: ~/.sonar/cache
+      key: ${{ runner.os }}-sonar
+      restore-keys: ${{ runner.os }}-sonar
+  - name: Cache Maven packages
+    uses: actions/cache@v4
+    with:
+      path: ~/.m2/repository
+      key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+      restore-keys: |
+        ${{ runner.os }}-maven-
 
-      # --- STEP 3: Cache Maven dependencies ---
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+  # --- STEP 4: Make mvnw executable ---
+  - name: Grant execute permission for mvnw
+    run: chmod +x mvnw
 
-      # --- STEP 4: Make mvnw executable ---
-      - name: Grant execute permission for mvnw
-        run: chmod +x mvnw
+  # --- STEP 5: Build and Test ---
+  - name: Build and Test with Maven
+    run: ./mvnw -B verify
 
-      # --- STEP 5: Build and Test ---
-      - name: Build and Test with Maven
-        run: ./mvnw -B verify
+  # --- STEP 6: SonarCloud Static Analysis (SAST) ---
+  - name: Analyze with SonarQube (SAST)
+    if: success()
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    run: |
+      ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
+        -Dsonar.organization=zm24acgriyan \
+        -Dsonar.host.url=https://sonarcloud.io
 
-      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
-      - name: Analyze with SonarQube (SAST)
-        if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
-            -Dsonar.organization=zm24acgriyan \
-            -Dsonar.host.url=https://sonarcloud.io
-            
-      # --- STEP 7: NEW - Run Snyk Open Source (SCA) Scan ---
-      # This replaces the broken OWASP steps.
-      # It will test your pom.xml, find the log4j vulnerability,
-      # and fail the build as intended.
-      - name: Run Snyk Open Source (SCA) Scan
-        if: success()
-        # This is the official Snyk GitHub Action for Maven.
-        uses: snyk/actions/maven@latest
-        env:
-          # This pulls your SNYK_TOKEN from GitHub Secrets
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          # This command tells Snyk to fail if it finds any high-severity vulnerability
-          args: --fail-on=high
+  # --- STEP 7: Snyk Scan (SCA) ---
+  # This is the corrected step
+  - name: Run Snyk Open Source (SCA) Scan
+    # This uses the official Snyk Action for Maven
+    uses: snyk/actions/maven@latest
+    if: success()
+    env:
+      # This pulls your Snyk token from GitHub Secrets
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    with:
+      # This command tells Snyk to 'test' the project
+      command: test
+      # This tells Snyk to FAIL THE BUILD if a high-severity
+      # vulnerability (like log4j) is found.
+      args: --fail-on=high
+
+  # --- STEP 8: Upload Snyk Report (Evidence) ---
+  # This step only runs if Step 7 failed (which we want!)
+  - name: Upload Snyk Scan Report
+    uses: actions/upload-artifact@v4
+    if: failure() # Only run this if the 'snyk' step fails
+    with:
+      name: snyk-scan-report
+      path: snyk.html # Snyk automatically creates this file
