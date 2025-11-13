@@ -76,14 +76,16 @@ jobs:
           snyk test --all-projects --severity-threshold=high --json-file-output=snyk.json || true
           snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif || true
 
-      # --- STEP 8: Upload Reports if Available ---
+           # --- STEP 8: Upload Snyk Scan Report (if generated) ---
       - name: Upload Snyk Scan Report (if generated)
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: snyk-scan-report
-          path: snyk.json,snyk.sarif
+          path: |
+            snyk.json
+            snyk.sarif
 
       # --- STEP 9: Upload to GitHub Security Dashboard (Optional) ---
       - name: Upload Snyk SARIF to GitHub Security Dashboard
