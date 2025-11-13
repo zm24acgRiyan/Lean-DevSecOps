@@ -57,6 +57,15 @@
 <!-- Set the minimum severity level to trigger a build failure. -->
 <!-- Ensures the build fails if High or Critical vulnerabilities are found. -->
 <failOnSeverity>high</failOnSeverity>
+<!-- 
+    NEW: Explicitly enable and define paths for JSON and SARIF reports.
+    This ensures the pipeline's artifact upload step can find the files. 
+-->
+<reportJson>true</reportJson>
+<reportSarif>true</reportSarif>
+<!-- Uses Maven variable to target the standard 'target' directory -->
+<jsonFile>${project.build.directory}/snyk.json</jsonFile>
+<sarifFile>${project.build.directory}/snyk.sarif</sarifFile>
 <!-- The Snyk API token must be set as an environment variable (SNYK_TOKEN) in your CI/CD pipeline. -->
 </configuration>
 </execution>
