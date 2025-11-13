@@ -19,5 +19,5 @@ public class LeanDevSecOpsApplication {
 	}
 	
 	// The vulnerable methods (dbPassword and vulnerableSql) have been removed
-	// to remediate the SAST findings detected by SonarQube.
+	// to remediate the SAST findings detects by SonarQube.
 }
