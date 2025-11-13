@@ -61,18 +61,26 @@ jobs:
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
 
-           # --- STEP 7: Snyk Scan (SCA) ---
+      # --- STEP 7: Verify Java Setup (Optional but Recommended) ---
+      - name: Verify Java Setup
+        run: |
+          echo "JAVA_HOME is set to: $JAVA_HOME"
+          java -version
+          ./mvnw -v
+
+      # --- STEP 8: Snyk Scan (SCA) ---
       - name: Run Snyk Open Source (SCA) Scan
         uses: snyk/actions/maven@v1
         if: success()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          JAVA_HOME: ${{ env.JAVA_HOME }}
+          JAVA_HOME: /opt/hostedtoolcache/jdk/17*/x64  # Explicitly define JAVA_HOME
         with:
           command: test
           args: --severity-threshold=high --json-file-output=snyk.json --sarif-file-output=snyk.sarif
+          project-folder: .   # Ensure mvnw runs in correct directory
 
-      # --- STEP 8: Upload Snyk Scan Reports ---
+      # --- STEP 9: Upload Snyk Scan Reports ---
       - name: Upload Snyk Scan Reports
         uses: actions/upload-artifact@v4
         if: always()
