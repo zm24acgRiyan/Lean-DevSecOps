@@ -37,13 +37,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
         <scope>test</scope>
     </dependency>
 
-    <!-- A deliberately vulnerable dependency for SCA testing -->
-    <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>2.14.1</version>
-    </dependency>
-
 </dependencies>
 
 <build>
