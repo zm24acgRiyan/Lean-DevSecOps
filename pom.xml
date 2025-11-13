@@ -1,75 +1,93 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+name: Java CI with Maven (SAST + Snyk SCA)
 
-    <modelVersion>4.0.0</modelVersion>
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-    <groupId>com.boostphysio</groupId>
-    <artifactId>bpc-final</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <name>Boost Physio Clinic Booking System</name>
-    <description>A simple physiotherapy booking management system built using Java and Maven.</description>
-    <packaging>jar</packaging>
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    steps:
+      # --- STEP 0: Checkout Code ---
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube needs full history
 
-    <dependencies>
-        <!-- JUnit for Unit Testing -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.0</version>
-            <scope>test</scope>
-        </dependency>
+      # --- STEP 1: Set up Java ---
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-        <!-- Gson for JSON Handling -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.11.0</version>
-        </dependency>
+      # --- STEP 2 & 3: Cache Dependencies ---
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-        <!-- SLF4J API (Logging Interface) -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.16</version>
-        </dependency>
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-        <!-- Logback Classic (Safe Logging Implementation) -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.5.6</version>
-        </dependency>
+      # --- STEP 4: Make mvnw Executable ---
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
 
-    </dependencies>
+      # --- STEP 5: Build and Test ---
+      - name: Build and Test with Maven
+        run: ./mvnw -B verify
 
-    <build>
-        <plugins>
-            <!-- Maven Compiler Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <release>17</release>
-                </configuration>
-            </plugin>
+      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
+      - name: Analyze with SonarQube (SAST)
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
+            -Dsonar.organization=zm24acgriyan \
+            -Dsonar.host.url=https://sonarcloud.io
 
-            <!-- Maven Surefire Plugin for running tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-        </plugins>
-    </build>
+      # --- STEP 7: Install and Run Snyk (SCA) ---
+      - name: Install Snyk CLI
+        run: |
+          echo "Installing Snyk CLI..."
+          npm install -g snyk
 
-</project>
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk Open Source (SCA) Scan
+        continue-on-error: true
+        run: |
+          echo "Running Snyk test..."
+          snyk test --all-projects --severity-threshold=high --json-file-output=snyk.json || true
+          snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif || true
+
+      # --- STEP 8: Upload Reports if Available ---
+      - name: Upload Snyk Scan Report (if generated)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-scan-report
+          path: snyk.json,snyk.sarif
+
+      # --- STEP 9: Upload to GitHub Security Dashboard (Optional) ---
+      - name: Upload Snyk SARIF to GitHub Security Dashboard
+        if: success() && hashFiles('snyk.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
