@@ -97,7 +97,7 @@ jobs:
                      --json-file-output=snyk.json \
                      --sarif-file-output=snyk.sarif || true
 
-      # --- STEP 11: Upload Snyk artifacts (JSON + SARIF) ---
+      # --- STEP 11: Upload Snyk artifact (JSON + SARIF) ---
       - name: Upload Snyk Scan Reports
         uses: actions/upload-artifact@v4
         if: always()
