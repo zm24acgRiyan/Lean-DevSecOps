@@ -1,7 +1,4 @@
-# Final pipeline with SAST (SonarQube) and SCA (Snyk)
-# This version adds 'continue-on-error' to fix upload failures on clean builds
-
-name: Java CI with Maven (SAST + Snyk SCA)
+name: Java CI with Maven (SAST + Snyk SCA Experiment)
 
 on:
   push:
@@ -11,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  security-events: write  # Needed for SARIF upload to GitHub Security tab
+  security-events: write  # Required for SARIF upload to GitHub Security tab
 
 jobs:
   build-and-analyze:
@@ -22,7 +19,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # SonarQube needs full history
+          fetch-depth: 0
 
       # --- STEP 1: Set up Java ---
       - name: Set up JDK 17
@@ -47,7 +44,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
       # --- STEP 4: Make mvnw executable ---
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
@@ -67,20 +63,18 @@ jobs:
             -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
-
       # --- STEP 7: Verify Java Setup ---
       - name: Verify Java Setup
         run: |
           echo "JAVA_HOME is set to: $JAVA_HOME"
           java -version
           ./mvnw -v
-
       # --- STEP 8: Install Snyk CLI ---
       - name: Install Snyk CLI
         if: success()
         run: npm install -g snyk
 
-      # --- STEP 9: Verify Snyk Authentication (fixed) ---
+      # --- STEP 9: Verify Snyk Authentication ---
       - name: Verify Snyk Authentication
         if: success()
         env:
@@ -89,39 +83,28 @@ jobs:
           echo "Authenticating Snyk CLI..."
           snyk auth $SNYK_TOKEN
           echo "Snyk token configured: $(snyk config get api | sed 's/./*/g')"
-
-      # --- STEP 10: Run Snyk Open Source (SCA) Scan ---
+      # --- STEP 10: Run Snyk Open Source (SCA) Scan — FAIL on HIGH or CRITICAL ---
       - name: Run Snyk Open Source (SCA) Scan
         if: success()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          echo "Running Snyk test..."
-          # This command will PASS because all dependencies are clean
-          snyk test --all-projects --severity-threshold=high --json-file-output=snyk.json --sarif-file-output=snyk.sarif
-
+          echo "Running Snyk SCA scan (will fail if CRITICAL vulnerability found)..."
+          snyk test --all-projects --severity-threshold=high --fail-on=all \
+            --json-file-output=snyk.json \
+            --sarif-file-output=snyk.sarif
       # --- STEP 11: Upload Snyk Scan Reports ---
-      # This step will now be skipped if snyk.json is missing,
-      # and will not fail the build.
       - name: Upload Snyk Scan Reports
         uses: actions/upload-artifact@v4
         if: always()
-        # THIS IS THE FIX:
-        continue-on-error: true 
         with:
           name: snyk-scan-reports
           path: |
             snyk.json
             snyk.sarif
-
       # --- STEP 12: Upload Snyk SARIF to GitHub Security Tab ---
-      # This step will also be skipped if snyk.sarif is missing,
-      # and will not fail the build.
       - name: Upload Snyk Results to Code Scanning
-        # THIS IS THE FIX (v4):
-        uses: github/codeql-action/upload-sarif@v4 
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
-        # THIS IS THE FIX:
-        continue-on-error: true 
         with:
           sarif_file: snyk.sarif
