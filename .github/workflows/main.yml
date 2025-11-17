@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # SonarCloud needs full history for analysis
+          fetch-depth: 0
 
       # --- STEP 1: Set up Java ---
       - name: Set up JDK 17
@@ -25,8 +25,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          # Add the settings.xml option if you use a custom Maven settings file
-          # settings-path: ${{ github.workspace }}
 
       # --- STEP 2: Cache SonarCloud packages ---
       - name: Cache SonarCloud packages
@@ -51,7 +49,6 @@ jobs:
 
       # --- STEP 5: Build and Test ---
       - name: Build and Test with Maven
-        # The 'verify' lifecycle phase includes 'test' and prepares the project for packaging
         run: ./mvnw -B verify
 
       # --- STEP 6: SonarCloud Static Analysis (SAST) ---
@@ -65,13 +62,13 @@ jobs:
             -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
-            
-      # --- STEP 7: Run Snyk Open Source (SCA) Scan ---
+
+      # --- STEP 7: Snyk Open Source Scan (SCA) ---
       - name: Run Snyk Open Source (SCA) Scan
         if: success()
-        uses: snyk/actions/maven@master # Use 'master' for more reliable latest updates or 'v2' for a specific major version
+        uses: snyk/actions/maven@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          # Use 'high' or 'medium' depending on your project's security policy
-          args: --fail-on=high --all-projects
+          # Choose one: all | upgradable | patchable
+          args: --fail-on=all --all-projects
