@@ -3,6 +3,7 @@ package com.example.LeanDevSecOps;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+// Removed @RestController and @GetMapping
 @SpringBootApplication
 public class LeanDevSecOpsApplication {
 
@@ -10,4 +11,5 @@ public class LeanDevSecOpsApplication {
 		SpringApplication.run(LeanDevSecOpsApplication.class, args);
 	}
 	
+	// The methods were moved to DemoController.java to improve maintainability.
 }
