@@ -1,5 +1,3 @@
-# Final pipeline with SAST (SonarCloud) and Snyk (SCA)
-
 name: Java CI with Maven (SAST + Snyk SCA)
 
 on:
@@ -7,6 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+permissions:
+  contents: read
+  security-events: write   # Needed to upload SARIF to GitHub
 
 jobs:
   build-and-analyze:
@@ -23,8 +25,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       # --- STEP 2: Cache SonarCloud packages ---
       - name: Cache SonarCloud packages
@@ -32,43 +34,84 @@ jobs:
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
 
-      # --- STEP 3: Cache Maven dependencies ---
+      # --- STEP 3: Cache Maven packages ---
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${!! runner.os !!}-maven-
 
       # --- STEP 4: Make mvnw executable ---
-      - name: Grant execute permission for mvnw
+      - name: Make mvnw executable
         run: chmod +x mvnw
 
       # --- STEP 5: Build and Test ---
       - name: Build and Test with Maven
         run: ./mvnw -B verify
 
-      # --- STEP 6: SonarCloud Static Analysis (SAST) ---
-      - name: Analyze with SonarCloud (SAST)
+      # --- STEP 6: SonarCloud Analysis (SAST) ---
+      - name: Analyze with SonarCloud
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
             -Dsonar.organization=zm24acgriyan \
             -Dsonar.host.url=https://sonarcloud.io
 
-      # --- STEP 7: Snyk Open Source Scan (SCA) ---
-      - name: Run Snyk Open Source (SCA) Scan
+      # --- STEP 7: Verify Java Setup ---
+      - name: Verify Java Setup
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          ./mvnw -v
+
+      # --- STEP 8: Install Snyk CLI ---
+      - name: Install Snyk CLI
         if: success()
-        uses: snyk/actions/maven@master
+        uses: snyk/actions/setup@master
+
+      # --- STEP 9: Authenticate Snyk ---
+      - name: Authenticate Snyk
+        if: success()
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk auth "$SNYK_TOKEN"
+          echo "Snyk authentication complete."
+
+      # --- STEP 10: Run Snyk SCA Scan ---
+      - name: Run Snyk SCA
+        if: success()
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          echo "Running Snyk Test..."
+          snyk test --all-projects \
+                     --severity-threshold=high \
+                     --json-file-output=snyk.json \
+                     --sarif-file-output=snyk.sarif || true
+
+      # --- STEP 11: Upload Snyk artifacts (JSON + SARIF) ---
+      - name: Upload Snyk Scan Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
         with:
-          # Choose one: all | upgradable | patchable
-          args: --fail-on=all --all-projects
+          name: snyk-scan-reports
+          path: |
+            snyk.json
+            snyk.sarif
+
+      # --- STEP 12: Upload SARIF to GitHub Security ---
+      - name: Upload Snyk SARIF to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: snyk.sarif

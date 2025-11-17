@@ -9,7 +9,8 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.0</version>
-        <relativePath/> </parent>
+        <relativePath/>
+    </parent>
 
     <groupId>com.example</groupId>
     <artifactId>Lean-DevSecOps</artifactId>
@@ -22,17 +23,18 @@
     </properties>
 
     <dependencies>
+        <!-- Spring Boot Web Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Spring Boot Test Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
