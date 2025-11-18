@@ -1,12 +1,13 @@
-// ... inside DemoController.java
+package com.example.leandevsecops; // <-- FIXED
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class DemoController {
+
 	@GetMapping("/")
-
 	public String hello() {
-
 		return "Hello, this is the main application!";
-
-	} // <-- The method ends here
-
-} // <-- The class ends here
-
-		return "Hello, this is the main application!"; // <-- THIS IS THE UNREACHABLE CODE
+	}
+}
