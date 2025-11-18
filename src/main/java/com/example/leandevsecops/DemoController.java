@@ -1,14 +1,12 @@
-package com.example.leandevsecops;
+// ... inside DemoController.java
+	@GetMapping("/")
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+	public String hello() {
 
-@SpringBootApplication
-public class LeanDevSecOpsApplication {
+		return "Hello, this is the main application!";
 
-	public static void main(String[] args) {
-		SpringApplication.run(LeanDevSecOpsApplication.class, args);
-	}
-	
-	// The methods were moved to DemoController.java to improve maintainability.
-}
+	} // <-- The method ends here
+
+} // <-- The class ends here
+
+		return "Hello, this is the main application!"; // <-- THIS IS THE UNREACHABLE CODE
