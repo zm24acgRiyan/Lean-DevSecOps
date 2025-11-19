@@ -11,9 +11,13 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>Lean-DevSecOps</name>
     <description>Lean DevSecOps Spring Boot Project for CI/CD and SonarCloud Integration</description>
+
     <properties>
         <java.version>17</java.version>
+        <jacoco.version>0.8.11</jacoco.version>
+        <main.class.path>com/example/LeanDevSecOpsApplication.class</main.class.path>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -25,6 +29,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -35,7 +40,12 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version> 
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>${main.class.path}</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
