@@ -62,7 +62,9 @@ jobs:
           ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=zm24acgRiyan_Lean-DevSecOps \
             -Dsonar.organization=zm24acgriyan \
-            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          # ^--- THIS IS THE NEW LINE ---^
 
       # --- STEP 7: Verify Java Setup ---
       - name: Verify Java Setup
