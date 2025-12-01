@@ -117,11 +117,19 @@ jobs:
         with:
           sarif_file: snyk.sarif
 
-      # --- STEP 13: Build Docker Image ---
+      # --- STEP 13: Verify JAR exists ---
+      - name: Verify JAR exists
+        run: |
+          if [ ! -f target/myapp.jar ]; then
+            echo "ERROR: target/myapp.jar not found"
+            exit 1
+          fi
+
+      # --- STEP 14: Build Docker Image ---
       - name: Build Docker Image
         run: docker build -t myapp:latest .
 
-      # --- STEP 14: Scan Docker Image with Trivy ---
+      # --- STEP 15: Scan Docker Image with Trivy ---
       - name: Scan Docker Image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -129,3 +137,11 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 1
           ignore-unfixed: true
+
+      # --- STEP 16: Upload Trivy Scan Report ---
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-scan-report
+          path: trivy-report.json
