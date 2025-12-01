@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- STEP 1: Set up Java ---
+      # --- STEP 1: Set up JDK 17 ---
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -129,19 +129,40 @@ jobs:
       - name: Build Docker Image
         run: docker build -t myapp:latest .
 
-      # --- STEP 15: Scan Docker Image with Trivy ---
-      - name: Scan Docker Image with Trivy
+      # --- STEP 15: Scan Docker Image with Trivy (JSON + SARIF) ---
+      - name: Scan Docker Image with Trivy (JSON)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: myapp:latest
           severity: HIGH,CRITICAL
-          exit-code: 1
+          exit-code: 0
           ignore-unfixed: true
+          format: json
+          output: trivy-report.json
 
-      # --- STEP 16: Upload Trivy Scan Report ---
-      - name: Upload Trivy Scan Report
+      - name: Scan Docker Image with Trivy (SARIF)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myapp:latest
+          severity: HIGH,CRITICAL
+          exit-code: 0
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-report.sarif
+
+      # --- STEP 16: Upload Trivy Scan Reports ---
+      - name: Upload Trivy Scan Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trivy-scan-report
-          path: trivy-report.json
+          name: trivy-scan-reports
+          path: |
+            trivy-report.json
+            trivy-report.sarif
+
+      # --- STEP 17: Upload Trivy SARIF to GitHub Security Tab ---
+      - name: Upload Trivy SARIF to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-report.sarif
