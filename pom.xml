@@ -36,6 +36,9 @@
   </dependencies>
 
   <build>
+    <!-- Force Maven to produce target/myapp.jar -->
+    <finalName>myapp</finalName>
+
     <plugins>
       <!-- Spring Boot Plugin -->
       <plugin>
