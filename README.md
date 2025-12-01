@@ -1,9 +1,7 @@
 # Lean-DevSecOps
 
 
-
 \# DevSecOps Investigation Journey: An Analytical Case Study of "Shift-Left" Security
-
 
 
 \## 📖 Project Overview
@@ -12,11 +10,7 @@ This project investigates the trade-offs of \*\*DevSecOps\*\* practices, focusin
 
 It provides a practical, empirical case study of "Shift-Left" security by integrating static analysis (SAST) and software composition analysis (SCA) tools into a Spring Boot pipeline.
 
-
-
 ---
-
-
 
 \## 🎯 Objectives
 
@@ -26,11 +20,7 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 
 \- Provide analytical conclusions on tool reliability, performance trade-offs, and enforcement policies.
 
-
-
 ---
-
-
 
 \## 🛠️ Technical Stack
 
@@ -48,14 +38,9 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 
 &nbsp; - OWASP Dependency-Check (attempted, failed)
 
-
-
 ---
 
-
-
 \## 📊 Experimental Phases
-
 
 
 \### Phase 1: Baseline Pipeline
@@ -65,7 +50,6 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 \- \*\*Baseline runtime\*\*: 43 seconds.
 
 
-
 \### Phase 2: Performance Experimentation (Cost)
 
 \- \*\*SonarQube (SAST)\*\*: +14s overhead (total 57s).
@@ -73,7 +57,6 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 \- \*\*OWASP Dependency-Check (SCA)\*\*: Failed due to NVD API errors.
 
 \- \*\*Snyk (SCA)\*\*: +26s overhead (total 1m 23s). Reliable and fast compared to OWASP.
-
 
 
 \### Phase 3: Efficacy Experimentation (Benefit)
@@ -87,7 +70,6 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 &nbsp; → SonarCloud flagged issues, Quality Gate failed.
 
 
-
 \### Phase 4: Fix Cycle (Pass)
 
 \- Removed vulnerable dependency (Log4j).  
@@ -98,11 +80,7 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 
 \- Final pipeline: \*\*Green ✅\*\*, Quality Gate: \*\*Passed\*\*.
 
-
-
 ---
-
-
 
 \## 📌 Key Findings
 
@@ -114,11 +92,7 @@ It provides a practical, empirical case study of "Shift-Left" security by integr
 
 \- \*\*Full Cycle Achieved\*\*: Find → Fail → Fix → Pass.
 
-
-
 ---
-
-
 
 \## 📂 Repository Structure
 
