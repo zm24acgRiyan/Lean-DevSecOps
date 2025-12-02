@@ -6,18 +6,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(DemoController.class)
-public class DemoControllerTest {
+@WebMvcTest(VulnerableController.class)
+public class VulnerableControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void testHelloEndpoint() throws Exception {
-        mockMvc.perform(get("/"))
-               .andExpect(status().isOk())
-               .andExpect(content().string("Hello, this is the main application!"));
+    public void testInsecureEndpoint() throws Exception {
+        mockMvc.perform(get("/insecure").param("username", "admin"))
+               .andExpect(status().isOk());
     }
 }
