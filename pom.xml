@@ -36,14 +36,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 🚨 Deliberately vulnerable dependency (Log4Shell) -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.14.1</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <!-- Force Maven to produce target/myapp.jar -->
         <finalName>myapp</finalName>
