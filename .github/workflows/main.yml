@@ -51,7 +51,7 @@ jobs:
 
       # --- STEP 5: Build and Test ---
       - name: Build and Test with Maven
-        # FIX: Use 'package' to ensure target/myapp.jar is created
+        # FIX: Use 'package' to ensure the JAR is created
         run: ./mvnw -B package
 
       # --- STEP 6: SonarCloud Analysis (SAST) ---
@@ -119,17 +119,30 @@ jobs:
         with:
           sarif_file: snyk.sarif
 
-      # --- STEP 13: Verify JAR exists ---
-      - name: Verify JAR exists
+      # --- STEP 13: Verify JAR exists and Determine Artifact Name ---
+      # FIX: Dynamically find the JAR name (e.g., Lean-DevSecOps-0.0.1-SNAPSHOT.jar)
+      - name: Determine JAR Artifact Name
+        id: set_jar_name
+        shell: bash
         run: |
-          if [ ! -f target/myapp.jar ]; then
+          # Find the actual JAR file path (only takes the first one found)
+          JAR_PATH=$(ls target/*.jar | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
             echo "ERROR: target/myapp.jar not found"
             exit 1
           fi
+          
+          # Extract just the file name
+          JAR_NAME=$(basename $JAR_PATH)
+          
+          # Set the output variable for use in subsequent steps
+          echo "jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
+          echo "Found and set JAR_NAME: $JAR_NAME"
 
       # --- STEP 14: Build Docker Image ---
       - name: Build Docker Image
-        run: docker build -t myapp:latest .
+        # FIX: Pass the dynamically found JAR name as a build argument
+        run: docker build -t myapp:latest --build-arg JAR_FILE=${{ steps.set_jar_name.outputs.jar_name }} .
 
       # --- STEP 15: Scan Docker Image with Trivy (JSON + SARIF) ---
       - name: Scan Docker Image with Trivy (JSON)
@@ -165,7 +178,6 @@ jobs:
       # --- STEP 17: Upload Trivy SARIF to GitHub Security Tab ---
       - name: Upload Trivy SARIF to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v4
-        # FIX: Only attempt to upload if the Trivy scan successfully created the file
         if: success()
         with:
           sarif_file: trivy-report.sarif

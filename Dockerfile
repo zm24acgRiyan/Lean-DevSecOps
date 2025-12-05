@@ -1,8 +1,8 @@
 # Use a pinned Eclipse Temurin JDK 17 Alpine image
 FROM eclipse-temurin:17.0.10_7-jdk-alpine
 
-# Define the build argument (JAR_FILE) to receive the dynamically generated artifact name
-# This value is passed via the --build-arg flag in the GitHub Actions workflow (Step 14)
+# Define the build argument (JAR_FILE) to receive the dynamically generated artifact name 
+# from the GitHub Actions workflow.
 ARG JAR_FILE
 
 WORKDIR /app
