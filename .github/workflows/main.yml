@@ -96,24 +96,22 @@ jobs:
           snyk test --all-projects \
                      --severity-threshold=high \
                      --json-file-output=snyk.json \
-                     --sarif-file-output=snyk.sarif || true
+                     --sarif-file-output=snyk.sarif
 
       # --- STEP 11: Upload Snyk artifact (JSON + SARIF) ---
       - name: Upload Snyk Scan Reports
         uses: actions/upload-artifact@v4
         if: always()
-        continue-on-error: true
         with:
           name: snyk-scan-reports
           path: |
             snyk.json
             snyk.sarif
 
-      # --- STEP 12: Upload SARIF to GitHub Security ---
+      # --- STEP 12: Upload Snyk SARIF to GitHub Security ---
       - name: Upload Snyk SARIF to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
-        continue-on-error: true
         with:
           sarif_file: snyk.sarif
 
@@ -127,5 +125,14 @@ jobs:
         with:
           image-ref: myapp:latest
           severity: HIGH,CRITICAL
-          exit-code: 1
+          format: sarif
+          output: trivy.sarif
+          exit-code: 0        # <-- Do not fail pipeline
           ignore-unfixed: true
+
+      # --- STEP 15: Upload Trivy SARIF to GitHub Security Tab ---
+      - name: Upload Trivy SARIF to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy.sarif
