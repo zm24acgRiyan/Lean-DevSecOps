@@ -8,7 +8,8 @@ on:
 
 permissions:
   contents: read
-  security-events: write    # Needed to upload SARIF to GitHub
+  # Needed to upload SARIF to GitHub
+  security-events: write
 
 jobs:
   build-and-analyze:
@@ -50,7 +51,7 @@ jobs:
 
       # --- STEP 5: Build and Test ---
       - name: Build and Test with Maven
-        # FIX 1: Use 'package' to ensure target/myapp.jar is created
+        # FIX: Use 'package' to ensure target/myapp.jar is created
         run: ./mvnw -B package
 
       # --- STEP 6: SonarCloud Analysis (SAST) ---
@@ -164,7 +165,7 @@ jobs:
       # --- STEP 17: Upload Trivy SARIF to GitHub Security Tab ---
       - name: Upload Trivy SARIF to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v4
-        # FIX 2: Only attempt to upload if previous steps succeeded (Trivy scan created the file)
+        # FIX: Only attempt to upload if the Trivy scan successfully created the file
         if: success()
         with:
           sarif_file: trivy-report.sarif
